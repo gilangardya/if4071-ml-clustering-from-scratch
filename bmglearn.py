@@ -1,26 +1,61 @@
+"""Clustering from scratch  
+- K-Means
+- K-Medoids dengan PAM
+- DBScan
+- Agglomerative clustering
+"""
+
+# Authors: Gilang Ardyamandala Al Assyifa <gilangardya@gmail.com>
+#          Bobby Indra Nainggolan <>
+#          Mico <>
+#
+# License: MIT License
+
 import numpy as np
-from math import sqrt
 
-def Euclidean_distance(first_feature, second_feature):
-    squared_distance = 0
+def euclidean_distance(X, Y):
+    """
+    Menghitung jarak euclidean dari 2 vektor
 
-    # asumsi : kedua fitur memiliki panjang yang sama
-    for i in range(len(first_feature)):
-        squared_distance += (first_feature[i] - second_feature[i]) ** 2
+    Parameters
+    ----------
+    X : array berdimensi n
+    Y : array berdimensi n
 
-    euclidean_distance = sqrt(squared_distance)
+    Returns
+    -------
+    distance : Jarak euclidean
+    """
+    X = np.array(X)
+    Y = np.array(Y)
 
-    return euclidean_distance
+    distance = np.sqrt(((X-Y)**2).sum())
 
-def Manhattan_distance(first_feature, second_feature):
-    distance = 0
-    
-    for i in range(len(first_feature)):
-        distance += abs(first_feature[i] - second_feature[i])
-        
     return distance
 
-def isMember(a,B):
+def manhattan_distance(X, Y):
+    """
+    Menghitung jarak manhattan dari 2 vektor
+
+    Parameters
+    ----------
+    X : array berdimensi n
+    Y : array berdimensi n
+
+    Returns
+    -------
+    Jarak manhattan
+    """
+    X = np.array(X)
+    Y = np.array(Y)
+
+    distance = np.abs(X-Y).sum()
+
+    return distance
+
+def isMember(a, B):
+    """
+    """
     for b in B:
         if len(a)== len(b) :
             countTrue = 0
@@ -31,7 +66,25 @@ def isMember(a,B):
                 return True
     return False
 
-class KMeans :
+class KMeans():
+    """
+    K-Means clustering
+
+    Parameters
+    ----------
+    n_clusters : int, optional, default: 2
+        Banyaknya kluster yang ingin dibentuk.
+
+    tolerance : float, default: 0.0001
+        Toleransi konvergen.
+
+    max_iterations : int, default: 1000
+        Banyak iterasi maksimum.
+
+    Attributes
+    ----------
+
+    """
     def __init__(self, n_clusters=2, tolerance = 0.0001, max_iterations = 1000):
         self.k = n_clusters
         self.tolerance = tolerance
@@ -53,7 +106,7 @@ class KMeans :
                 self.classifications[i] = []
                 
             for feature in data:
-                distances = [Euclidean_distance(feature,self.centroids[centroid]) for centroid in self.centroids]
+                distances = [euclidean_distance(feature,self.centroids[centroid]) for centroid in self.centroids]
                 classification = distances.index(min(distances))
                 self.classifications[classification].append(feature)
             
@@ -77,7 +130,7 @@ class KMeans :
                 break
                 
     def predict(self, instance) :
-        distances = [Euclidean_distance(instance,self.centroids[centroid]) for centroid in self.centroids]
+        distances = [euclidean_distance(instance,self.centroids[centroid]) for centroid in self.centroids]
         classification = distances.index(min(distances))
         return classification
 
@@ -107,7 +160,22 @@ def _random(bound,size):
             return _rv
 
 
-class Medoid :
+class Medoid():
+    """
+    K-Medoid clustering dengan PAM (Partition Around Medoid)
+
+    Parameters
+    ----------
+    n_clusters : int, optional, default: 2
+        Banyaknya kluster yang ingin dibentuk.
+
+    max_iterations : int, default: 1000
+        Banyak iterasi maksimum.
+
+    Attributes
+    ----------
+
+    """
     def __init__(self, n_clusters=2, max_iterations = 1000):
         self.k = n_clusters
         self.max_iterations = max_iterations
@@ -157,7 +225,7 @@ class Medoid :
         return predictions
 
 
-def linkage_distance(cluster_A, cluster_B, linkage, distance_function=Euclidean_distance):
+def linkage_distance(cluster_A, cluster_B, linkage, distance_function=euclidean_distance):
     
     # A ke kanan, B ke bawah
     matric_distance = []
@@ -179,7 +247,23 @@ def linkage_distance(cluster_A, cluster_B, linkage, distance_function=Euclidean_
     elif linkage == 'average group':
         pass
 
-class Agglomerative :
+class Agglomerative():
+    """
+    Agglomerative clustering
+
+    Parameters
+    ----------
+    n_clusters : int, optional, default: 2
+        Banyaknya kluster yang ingin dibentuk.
+
+    affinity : 
+
+    linkage : 
+
+    Attributes
+    ----------
+
+    """
     def __init__(self, n_clusters=2, affinity = linkage_distance, linkage = 'single'):
         self.n_clusters = n_clusters
         self.affinity = affinity
@@ -222,8 +306,26 @@ class Agglomerative :
         self.fit(data)
         return self.classifications
 
-class DBScan :
-    def __init__(self, eps=0.5, minPts = 5, distance_function = Euclidean_distance):
+class DBScan():
+    """
+    Agglomerative clustering
+
+    Parameters
+    ----------
+    eps : float, optional, default: 0.5
+        Nilai epsilon penentuan data dalam satu kluster.
+
+    minPts : int, default: 5
+        Banyaknya minimal data untuk membentuk core cluster
+
+    distance_function : 
+        Fungsi jarak yang digunakan
+
+    Attributes
+    ----------
+
+    """
+    def __init__(self, eps=0.5, minPts = 5, distance_function = euclidean_distance):
         self.eps = eps
         self.minPts = minPts
         self.classifications = []
