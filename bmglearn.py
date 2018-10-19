@@ -6,7 +6,7 @@
 """
 
 # Authors: Gilang Ardyamandala Al Assyifa <gilangardya@gmail.com>
-#          Bobby Indra Nainggolan <>
+#          Bobby Indra Nainggolan <kodok.botak12@gmail.com>
 #          Mico <>
 #
 # License: MIT License
@@ -207,7 +207,13 @@ class Medoid():
                 costs = list(np.sum(distances, axis=1))
                 index = costs.index(np.min(costs))
                 self.medoids[i] = self.clusters[i][index]
-    
+
+        for point in data:
+            distances = [_mDistance(point, self.medoids[i]) for i in self.medoids]
+            min_dist = np.min(distances)
+            index = distances.index(min_dist)
+            self.labels_.append(index)
+
         self._fit = True
                 
                 
