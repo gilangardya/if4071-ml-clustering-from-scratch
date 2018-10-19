@@ -13,6 +13,140 @@
 
 import numpy as np
 from math import inf
+import itertools
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import accuracy_score
+import scipy as sp
+import scipy.stats
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.metrics import confusion_matrix
+
+np.set_printoptions(precision=4, suppress = True)
+plt.style.use('seaborn-whitegrid')
+
+def plot_confusion_matrix(cm, classes,title='Confusion matrix',cmap=plt.cm.Blues):
+    """
+    Melakukan plotting confusion matrix
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    with plt.xkcd():
+        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, classes, rotation=45)
+        plt.yticks(tick_marks, classes)
+
+        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            plt.text(j, i, format(cm[i, j], '.2f'),
+                        horizontalalignment="center",
+                        color="black")
+
+        plt.tight_layout()
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+
+def show_matrix(y_true, y_pred):
+    """
+    Melakukan plotting confusion matrix
+
+    Parameters
+    ----------
+    y_true : array sebenarnya
+    y_pred : array prediksi
+
+    Returns
+    -------
+    """    
+
+    cnf_matrix = confusion_matrix(y_true, y_pred)
+    np.set_printoptions(precision=2)
+
+    plt.figure()
+    plot_confusion_matrix(cnf_matrix, classes=[0,1],
+                      title='Confusion Matrix')
+    plt.show()
+
+
+def cross_val_check(clf, data, label, k, predict_type='predict'):
+    """
+    Melakukan cross validation
+
+    Parameters
+    ----------
+    clf : Model
+    data : data
+    label : label
+    k : jumlah fold data
+    
+    Returns
+    accuracy : array akurasi berukuran k
+    -------
+    """    
+    
+    folds = StratifiedKFold(n_splits=k, random_state=42, shuffle=True)
+    folds.get_n_splits(data,label)
+    accuracy = []
+    for train_index, test_index in folds.split(data, label):
+        X_train, X_test = data[train_index], data[test_index]
+        y_train, y_test = label[train_index], label[test_index]
+        
+        if (predict_type == 'predict'):
+            clf.fit(X_train)
+            y_pred = [clf.predict(instance) for instance in X_test]
+        elif (predict_type == 'fit_predict'):
+            y_pred = clf.fit_predict(X_test)
+        
+        cluster_index_combination = [[0,1,2],
+                                     [0,2,1],
+                                     [2,0,1],
+                                     [2,1,0],
+                                     [1,2,0],
+                                     [1,0,2]]
+        temp_accuracy_score = []
+        for c_i in cluster_index_combination:
+            relabel = np.choose(y_pred,c_i).astype(np.int64)
+            temp_accuracy_score.append(accuracy_score(y_test, relabel))
+            
+        accuracy.append(max(temp_accuracy_score))
+
+    plt.title("ACCURACY PLOT")
+    plt.xlabel("K-th Fold")
+    plt.ylabel("Accuracy")
+    plt.xticks(range(k),range(1,k+1))
+    plt.plot(accuracy, 'o--')
+    plt.axhline(y=np.mean(accuracy), color='r', linestyle='-')
+    plt.show()
+    return accuracy
+
+def mean_confidence_interval(data, confidence=0.95):
+    """
+    Menuliskan mean_convidence interval
+
+    Parameters
+    ----------
+    data : array akurasi
+    confidence : confidence
+    
+    Returns
+    -------
+    """    
+
+    a = 1.0*np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
+    print(round(m,3), "(+/-)", round(h,3))
+
+
 
 def euclidean_distance(X, Y):
     """
@@ -217,7 +351,6 @@ class KMedoids():
             convergence = (iteration >= self.max_iterations) or (new_error > error_val)
             
             if convergence:
-                print(iteration)
                 self.fit_ = True
                 break
             else:
