@@ -12,6 +12,7 @@
 # License: MIT License
 
 import numpy as np
+from math import inf
 
 def euclidean_distance(X, Y):
     """
@@ -159,75 +160,91 @@ def _random(bound, size):
             return _rv
 
 
-class Medoid():
+class KMedoids():
     """
-    K-Medoid clustering dengan PAM (Partition Around Medoid)
-
+    K-Means clustering
     Parameters
     ----------
     n_clusters : int, optional, default: 2
         Banyaknya kluster yang ingin dibentuk.
-
+    tolerance : float, default: 0.0001
+        Toleransi konvergen.
     max_iterations : int, default: 1000
         Banyak iterasi maksimum.
-
+        
     Attributes
     ----------
-
+    labels_ : array
+        kluster data
+    medoids_ : array data
+        data yang merupakan medoid tiap kluster
     """
-    def __init__(self, n_clusters=2, max_iterations=1000):
-        self.k = n_clusters
+    def __init__(self, n_clusters=2, max_iterations=10, medoid_init=[], strategy='all'):
+        self.n_clusters = n_clusters
         self.max_iterations = max_iterations
-        self.labels_ = []
-        self._fit = False
-   
-    
+        self.labels_ = np.array([])
+        self.medoids_ = np.array([])
+        self.medoid_init = medoid_init
+        self.strategy = strategy
+        self.fit_ = False
+        
     def fit(self, data):
-        
-        self.medoids = {}
-        self.clusters = {}
-        
-        _med = _random(len(data),self.k)
-        
-        for i in range(self.k):
-            self.medoids[i] = data[_med[i]]
-        
-        for _ in range(self.max_iterations):
-            for j in range(self.k):
-                self.clusters[j] = []
-                
-            for point in data:
-                distances = [_mDistance(point, self.medoids[i]) if point.all() == self.medoids[i].all() else 0  for i in self.medoids]
-                min_dist = np.min(distances)
-                index = distances.index(min_dist)
-                self.clusters[index].append(point)
-                
-            for i in self.clusters:
-                distances = [[_mDistance(point, every_point) if point.all() == every_point.all() else 0 for every_point in self.clusters[i]] for point in self.clusters[i]] 
-                costs = list(np.sum(distances, axis=1))
-                index = costs.index(np.min(costs))
-                self.medoids[i] = self.clusters[i][index]
-
-        for point in data:
-            distances = [_mDistance(point, self.medoids[i]) for i in self.medoids]
-            min_dist = np.min(distances)
-            index = distances.index(min_dist)
-            self.labels_.append(index)
-
-        self._fit = True
-                
-                
-    def predict(self, data):
-        assert self._fit, "a program call to fit() must be given before calling predict()"
+        if self.medoid_init != []:
+            self.medoids_ = data[self.medoid_init]
             
-        predictions = []
-        for point in data:
-            distances = [_mDistance(point, self.medoids[i]) for i in self.medoids]
-            min_dist = np.min(distances)
-            index = distances.index(min_dist)
-            predictions.append(index)
+        else: #random
+            random_init = np.random.choice(range(len(data)), self.n_clusters, replace=False)
+            self.medoids_ = data[random_init]
+        
+        convergence = False
+        iteration = 0
+        error_val = float(inf)
+        
+        while True:
+            distance_to_medoid = []
+            for medoid in self.medoids_:
+                distance_to_medoid.append(np.abs(medoid - data).sum(1))
+                
+            distance_to_medoid = np.array(distance_to_medoid)
+
+            self.labels_ = np.vectorize(lambda x: np.argmin(distance_to_medoid[:, x]))(range(len(data)))
             
-        return predictions
+            new_error = 0
+            for cluster_index, medoid in enumerate(self.medoids_):
+                new_error += np.abs(medoid, data[self.labels_ == cluster_index]).sum(1).sum()
+            
+            iteration += 1
+            convergence = (iteration >= self.max_iterations) or (new_error > error_val)
+            
+            if convergence:
+                print(iteration)
+                self.fit_ = True
+                break
+            else:
+                error_val = new_error
+                
+                if self.strategy == 'one':
+                    cluster_change = np.random.choice(range(self.n_clusters))
+                    self.medoids_[cluster_change] = data[np.random.choice(np.where(self.labels_ == cluster_change)[0])]
+                elif self.strategy == 'all':
+                    for cluster_index in range(self.n_clusters):
+                        self.medoids_[cluster_index] = data[np.random.choice(np.where(self.labels_ == cluster_index)[0])]
+        
+    def predict(self, instance):
+        if self.fit_ == True:
+            distance_to_medoid = []
+            for medoid in self.medoids_:
+                distance_to_medoid.append(np.abs(medoid - instance).sum(1))
+                
+            distance_to_medoid = np.array(distance_to_medoid)
+
+            return np.vectorize(lambda x: np.argmin(distance_to_medoid[:, x]))(range(len(instance)))
+        else:
+            print('Belum difit')
+        
+    def fit_predict(self, data):
+        self.fit(data)
+        return self.labels_
 
 
 def linkage_distance(cluster_A, cluster_B, linkage, distance_function=euclidean_distance):
