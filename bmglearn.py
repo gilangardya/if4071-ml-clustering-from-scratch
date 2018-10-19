@@ -227,12 +227,13 @@ class Medoid():
 def linkage_distance(cluster_A, cluster_B, linkage, distance_function=euclidean_distance):
     
     # A ke kanan, B ke bawah
-    matric_distance = []
-    for i in range(len(cluster_A)):
-        matric_distance.append([])
-        for j in range(len(cluster_B)):
-            matric_distance[i].append(distance_function(cluster_A[i],cluster_B[j]))
-    
+    if linkage != 'average_group':
+        matric_distance = []
+        for i in range(len(cluster_A)):
+            matric_distance.append([])
+            for j in range(len(cluster_B)):
+                matric_distance[i].append(distance_function(cluster_A[i], cluster_B[j]))
+
     if linkage == 'single':
         return min(min(matric_distance))
         
@@ -243,8 +244,8 @@ def linkage_distance(cluster_A, cluster_B, linkage, distance_function=euclidean_
         x = [sum(a) for a in matric_distance]
         return min(x) / len(cluster_A)
     
-    elif linkage == 'average group':
-        pass
+    elif linkage == 'average_group':
+        return distance_function(np.array(cluster_A).mean(0), np.array(cluster_B).mean(0))
 
 class Agglomerative():
     """
@@ -283,7 +284,7 @@ class Agglomerative():
             distances = [0] * len(self.clusters)
 
             for idx_cluster in range(len(self.clusters)): 
-                distances[idx_cluster] = [self.affinity(self.clusters[idx_cluster],self.clusters[i],self.linkage) 
+                distances[idx_cluster] = [self.affinity(self.clusters[idx_cluster], self.clusters[i], self.linkage) 
                              for i in range(len(self.clusters))]
                 
             min_distances = [sorted(distance)[1]for distance in distances]
@@ -298,7 +299,7 @@ class Agglomerative():
             
         for i in range(len(data)):
             for j in range(len(self.clusters)):
-                if isMember(np.array(data[i]),self.clusters[j]) :
+                if isMember(np.array(data[i]), self.clusters[j]) :
                     self.classifications[i] = j
                     
     def fit_predict(self, data) :
@@ -307,7 +308,7 @@ class Agglomerative():
 
 class DBScan():
     """
-    Agglomerative clustering
+    DBScan clustering
 
     Parameters
     ----------
@@ -330,7 +331,7 @@ class DBScan():
         self.classifications = []
         self.distance_function = distance_function
     
-    def fit(self,data):
+    def fit(self, data):
         # inisialisasi label dengan 0
         self.classifications = [0]*len(data)
         
@@ -343,8 +344,8 @@ class DBScan():
                     self.clusterID += 1
                     
         
-    def canBeExpanded(self,point_id, data) :
-        seeds = self.region_query(point_id,data)
+    def canBeExpanded(self, point_id, data) :
+        seeds = self.region_query(point_id, data)
         if len(seeds) < self.minPts:
             self.classifications[point_id] = -1
             return False
@@ -355,7 +356,7 @@ class DBScan():
                 
             while len(seeds) > 0:
                 current_point = seeds[0]
-                results = self.region_query(current_point,data)
+                results = self.region_query(current_point, data)
                 if len(results) >= self.minPts:
                     for i in range(len(results)):
                         result_point = results[i]
@@ -366,14 +367,14 @@ class DBScan():
                 seeds = seeds[1:]
             return True
     
-    def region_query(self,point_id,data):
+    def region_query(self, point_id, data):
         seeds = []
         for i in range(len(data)) :
-            if self.distance_function(data[point_id],data[i]) <= self.eps:
+            if self.distance_function(data[point_id], data[i]) <= self.eps:
                 seeds.append(i)
         return seeds
                             
         
-    def fit_predict(self,data):
+    def fit_predict(self, data):
         self.fit(data)
         return self.classifications
