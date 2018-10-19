@@ -57,7 +57,7 @@ def isMember(a, B):
     """
     """
     for b in B:
-        if len(a)== len(b) :
+        if len(a) == len(b):
             countTrue = 0
             for i in range(len(a)):
                  if (a[i] == b[i]):
