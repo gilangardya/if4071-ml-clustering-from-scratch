@@ -85,14 +85,13 @@ class KMeans():
     ----------
 
     """
-    def __init__(self, n_clusters=2, tolerance = 0.0001, max_iterations = 1000):
+    def __init__(self, n_clusters=2, tolerance=0.0001, max_iterations=1000):
         self.k = n_clusters
         self.tolerance = tolerance
         self.max_iterations = max_iterations
-        self.Labels_ = []
+        self.labels_ = []
         
-        
-    def fit(self,data):
+    def fit(self, data):
         self.centroids = {}
         
         ## inisialisasi centroid menggunakan k data pertama
@@ -106,7 +105,7 @@ class KMeans():
                 self.classifications[i] = []
                 
             for feature in data:
-                distances = [euclidean_distance(feature,self.centroids[centroid]) for centroid in self.centroids]
+                distances = [euclidean_distance(feature, self.centroids[centroid]) for centroid in self.centroids]
                 classification = distances.index(min(distances))
                 self.classifications[classification].append(feature)
             
@@ -126,7 +125,7 @@ class KMeans():
             
             # Kalo sudah konvergen, break
             if optimized:
-                self.Labels_ = [self.predict(instance) for instance in data]
+                self.labels_ = [self.predict(instance) for instance in data]
                 break
                 
     def predict(self, instance) :
@@ -142,10 +141,10 @@ class KMeans():
 
 
 
-def _mDistance(start,end):
+def _mDistance(start, end):
     return sum(abs(e - s) for s,e in zip(start,end))
     
-def _random(bound,size):
+def _random(bound, size):
     _rv = []
     _vis = []
     while True:
@@ -176,14 +175,14 @@ class Medoid():
     ----------
 
     """
-    def __init__(self, n_clusters=2, max_iterations = 1000):
+    def __init__(self, n_clusters=2, max_iterations=1000):
         self.k = n_clusters
         self.max_iterations = max_iterations
-        self.Labels_ = []
+        self.labels_ = []
         self._fit = False
    
     
-    def fit(self,data):
+    def fit(self, data):
         
         self.medoids = {}
         self.clusters = {}
@@ -264,14 +263,14 @@ class Agglomerative():
     ----------
 
     """
-    def __init__(self, n_clusters=2, affinity = linkage_distance, linkage = 'single'):
+    def __init__(self, n_clusters=2, affinity=linkage_distance, linkage='single'):
         self.n_clusters = n_clusters
         self.affinity = affinity
         self.classifications = []
         self.linkage = linkage
         self.clusters = []
     
-    def fit(self,data):
+    def fit(self, data):
         ## jika dilakukan fit ulang, data cluster direset
         self.clusters = []
         self.classifications = [0]* len(data)
