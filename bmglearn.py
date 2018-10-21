@@ -7,7 +7,7 @@
 
 # Authors: Gilang Ardyamandala Al Assyifa <gilangardya@gmail.com>
 #          Bobby Indra Nainggolan <kodok.botak12@gmail.com>
-#          Mico <>
+#          Mico <mccuandar@gmail.com>
 #
 # License: MIT License
 
@@ -112,11 +112,29 @@ def cross_val_check(clf, data, label, k, predict_type='predict'):
                                      [1,2,0],
                                      [1,0,2]]
         temp_accuracy_score = []
-        for c_i in cluster_index_combination:
-            relabel = np.choose(y_pred,c_i).astype(np.int64)
-            temp_accuracy_score.append(accuracy_score(y_test, relabel))
+        
+        if(isinstance(clf,DBScan)):
+            y_pred = []
+
+            for i in clf.classifications :
+                if i == -1 :
+                    y_pred.append(2)
+                else :
+                    y_pred.append(i)
+                    
+            for c_i in cluster_index_combination:
+                relabel = np.choose(y_pred,c_i).astype(np.int64)
+                temp_accuracy_score.append(accuracy_score(y_test, relabel))
+            accuracy.append(max(temp_accuracy_score))
+
+        else :
             
-        accuracy.append(max(temp_accuracy_score))
+                    
+            for c_i in cluster_index_combination:
+                relabel = np.choose(y_pred,c_i).astype(np.int64)
+                temp_accuracy_score.append(accuracy_score(y_test, relabel))
+            
+            accuracy.append(max(temp_accuracy_score))
 
     plt.title("ACCURACY PLOT")
     plt.xlabel("K-th Fold")
