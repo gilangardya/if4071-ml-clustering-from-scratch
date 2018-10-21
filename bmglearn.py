@@ -117,7 +117,7 @@ def cross_val_check(clf, data, label, k, predict_type='predict'):
             y_pred = []
 
             for i in clf.classifications :
-                if i == -1 :
+                if (i <0 or i > 2) :
                     y_pred.append(2)
                 else :
                     y_pred.append(i)
@@ -125,16 +125,14 @@ def cross_val_check(clf, data, label, k, predict_type='predict'):
             for c_i in cluster_index_combination:
                 relabel = np.choose(y_pred,c_i).astype(np.int64)
                 temp_accuracy_score.append(accuracy_score(y_test, relabel))
-            accuracy.append(max(temp_accuracy_score))
-
         else :
             
-                    
+             
             for c_i in cluster_index_combination:
                 relabel = np.choose(y_pred,c_i).astype(np.int64)
                 temp_accuracy_score.append(accuracy_score(y_test, relabel))
             
-            accuracy.append(max(temp_accuracy_score))
+        accuracy.append(max(temp_accuracy_score))
 
     plt.title("ACCURACY PLOT")
     plt.xlabel("K-th Fold")
